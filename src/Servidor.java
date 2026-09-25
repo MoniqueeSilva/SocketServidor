@@ -1,26 +1,24 @@
 import java.io.IOException;
-import java.io.PrintStream;
 import java.net.ServerSocket;
 import java.net.Socket;
-import java.util.Scanner;
 
 public class Servidor {
-    public static void main(String[] args) throws IOException{
+    public static void main(String[] args) throws IOException {
+        // 1. O ServidorSocket é criado uma única vez.
         ServerSocket servidor = new ServerSocket(12345);
-        System.out.println("comecou. aguardando...");
-        Socket conexao1 = servidor.accept();
-        System.out.println(conexao1.getInetAddress().getHostAddress());
-        Scanner LE_DO_SOCKET = new Scanner(conexao1.getInputStream());
-        PrintStream ESCREVE_NO_SOCKET = new PrintStream(conexao1.getOutputStream());
-        while(LE_DO_SOCKET.hasNextLine()){
-            ///ler do socket
-            String temp = LE_DO_SOCKET.nextLine();
-            System.out.println(temp);
-            //escrever no socket
-            ESCREVE_NO_SOCKET.println("Resposta da mensagem: "+temp+" = BLZ!!");
+        System.out.println("Servidor iniciado. Aguardando conexões...");
+
+        // 2. O Loop Infinito: o servidor nunca para de aceitar clientes.
+        while (true) {
+            // 3. O accept() bloqueia e espera um cliente. Quando um chega, ele cria o Socket.
+            Socket socketCliente = servidor.accept();
+            System.out.println("Novo cliente conectado: " + socketCliente.getInetAddress().getHostAddress());
+
+            // 4. A Mágica: Criamos uma nova Thread para este cliente específico.
+            // Passamos o socket para o ClienteHandler e iniciamos a Thread.
+            // O .start() faz a Thread rodar em paralelo, liberando o servidor para aceitar o próximo cliente.
+            Thread threadCliente = new Thread(new ClienteHandler(socketCliente));
+            threadCliente.start();
         }
-        LE_DO_SOCKET.close();
-        servidor.close();
-        conexao1.close();
     }
 }

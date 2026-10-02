@@ -3,27 +3,32 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
 
 // 1. Implementamos a interface Runnable.
 public class ClienteHandler implements Runnable {
 
     private Socket socketCliente;
     private BlockingQueue<Socket> filaConexoes;
+    private BlockingQueue<String> filaSaida;
 
     public ClienteHandler(Socket socketCliente, BlockingQueue<Socket> filaConexoes) {
         this.socketCliente = socketCliente;
-        this.filaConexoes = filaConexoes; 
+        this.filaConexoes = filaConexoes;
+        this.filaSaida = new LinkedBlockingQueue<>();
     }
 
     @Override
     public void run() {
+        new Thread(new Escritor(socketCliente, filaSaida)).start();
         try {
             Scanner leDoSocket = new Scanner(socketCliente.getInputStream());
-            PrintStream escreveNoSocket = new PrintStream(socketCliente.getOutputStream());
+            PrintStream escreveNoSocket = new PrintStream(new FilaOutputStream(filaSaida));
 
             while (leDoSocket.hasNextLine()) {
                 String mensagemCompleta = leDoSocket.nextLine();
-                System.out.println("Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagemCompleta);
+                System.out.println(
+                        "Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagemCompleta);
 
                 // 1. Separar o protocolo em CODIGO e DADOS
                 String[] partes = mensagemCompleta.split("\\|");
@@ -67,14 +72,15 @@ public class ClienteHandler implements Runnable {
 
         } catch (IOException e) {
             System.out.println("Erro na conexão com o cliente: " + e.getMessage());
-        }  finally {
+        } finally {
+            filaSaida.add("__FIM__");
             // Remove o socket da fila ao desconectar, liberando vaga
             filaConexoes.remove(socketCliente);
             System.out.println("Cliente removido. Conexões ativas: " + filaConexoes.size());
         }
     }
 
-        // ==================== MÉTODO AUXILIAR ====================
+    // ==================== MÉTODO AUXILIAR ====================
 
     /*
      * Lê e valida os dois números enviados no formato "NUM1,NUM2".
@@ -90,7 +96,7 @@ public class ClienteHandler implements Runnable {
             }
             int n1 = Integer.parseInt(numeros[0].trim());
             int n2 = Integer.parseInt(numeros[1].trim());
-            return new int[]{n1, n2};
+            return new int[] { n1, n2 };
         } catch (NumberFormatException e) {
             saida.println("ERRO: Entrada inválida. Digite apenas números inteiros.");
             return null;
@@ -101,19 +107,22 @@ public class ClienteHandler implements Runnable {
 
     private void realizarSoma(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
-        if (nums == null) return;
+        if (nums == null)
+            return;
         saida.println("Resultado: " + (nums[0] + nums[1]));
     }
 
     private void realizarSubtracao(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
-        if (nums == null) return;
+        if (nums == null)
+            return;
         saida.println("Resultado: " + (nums[0] - nums[1]));
     }
 
     private void realizarMultiplicacao(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
-        if (nums == null) return;
+        if (nums == null)
+            return;
         saida.println("Resultado: " + (nums[0] * nums[1]));
     }
 }

@@ -2,14 +2,17 @@ import java.io.IOException;
 import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
+import java.util.concurrent.BlockingQueue;
 
 // 1. Implementamos a interface Runnable.
 public class ClienteHandler implements Runnable {
 
     private Socket socketCliente;
+    private BlockingQueue<Socket> filaConexoes;
 
-    public ClienteHandler(Socket socketCliente) {
+    public ClienteHandler(Socket socketCliente, BlockingQueue<Socket> filaConexoes) {
         this.socketCliente = socketCliente;
+        this.filaConexoes = filaConexoes; 
     }
 
     @Override
@@ -64,6 +67,10 @@ public class ClienteHandler implements Runnable {
 
         } catch (IOException e) {
             System.out.println("Erro na conexão com o cliente: " + e.getMessage());
+        }  finally {
+            // Remove o socket da fila ao desconectar, liberando vaga
+            filaConexoes.remove(socketCliente);
+            System.out.println("Cliente removido. Conexões ativas: " + filaConexoes.size());
         }
     }
 

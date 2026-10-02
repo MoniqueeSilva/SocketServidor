@@ -3,94 +3,110 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.Scanner;
 
-// 1. Implementamos a interface Runnable. Isso diz ao Java que essa classe pode ser executada por uma Thread.
+// 1. Implementamos a interface Runnable.
 public class ClienteHandler implements Runnable {
 
     private Socket socketCliente;
 
-    // 2. O construtor recebe o Socket do cliente que foi aceito pelo Servidor.
     public ClienteHandler(Socket socketCliente) {
         this.socketCliente = socketCliente;
     }
 
-    // 3. O método run() é o que a Thread vai executar quando for iniciada.
     @Override
     public void run() {
         try {
-            // A lógica de leitura e escrita que antes ficava no main agora fica aqui.
             Scanner leDoSocket = new Scanner(socketCliente.getInputStream());
             PrintStream escreveNoSocket = new PrintStream(socketCliente.getOutputStream());
 
-            // Enquanto o cliente estiver conectado e enviando dados...
             while (leDoSocket.hasNextLine()) {
-                String mensagem = leDoSocket.nextLine();
-                System.out.println("Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagem);
+                String mensagemCompleta = leDoSocket.nextLine();
+                System.out.println("Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagemCompleta);
 
-                switch (mensagem) {
+                // 1. Separar o protocolo em CODIGO e DADOS
+                String[] partes = mensagemCompleta.split("\\|");
+                if (partes.length < 1 || partes[0].isEmpty()) {
+                    escreveNoSocket.println("ERRO: Formato inválido.");
+                    continue;
+                }
+
+                String codigo = partes[0];
+                String dados = (partes.length > 1) ? partes[1] : "";
+
+                // 2. Roteamento baseado no código
+                switch (codigo) {
                     case "1":
-                        realizarSoma(leDoSocket, escreveNoSocket);
+                        realizarSoma(dados, escreveNoSocket);
                         break;
-
                     case "2":
-                        realizarSubtracao(leDoSocket, escreveNoSocket);
+                        realizarSubtracao(dados, escreveNoSocket);
                         break;
-
                     case "3":
-                        realizarMultiplicacao(leDoSocket, escreveNoSocket);
+                        realizarMultiplicacao(dados, escreveNoSocket);
                         break;
-
                     case "4":
                         escreveNoSocket.println("Operação de imagem ainda não implementada.");
                         break;
-
                     case "0":
                         escreveNoSocket.println("Conexão encerrada pelo cliente.");
                         leDoSocket.close();
                         escreveNoSocket.close();
                         socketCliente.close();
                         return;
-
                     default:
                         escreveNoSocket.println("Opção inválida.");
                 }
             }
 
-            // Se sair do while, o cliente desconectou. Fechamos os recursos.
             System.out.println("Cliente desconectado: " + socketCliente.getInetAddress().getHostAddress());
             leDoSocket.close();
             escreveNoSocket.close();
             socketCliente.close();
 
         } catch (IOException e) {
-            // Tratamento de erro caso a conexão caia de forma inesperada.
             System.out.println("Erro na conexão com o cliente: " + e.getMessage());
         }
     }
 
-    private void realizarSoma(Scanner entrada, PrintStream saida) {
-        saida.println("Digite o primeiro número:");
-        int numero1 = Integer.parseInt(entrada.nextLine());
-        saida.println("Digite o segundo número:");
-        int numero2 = Integer.parseInt(entrada.nextLine());
-        int resultado = numero1 + numero2;
-        saida.println("Resultado: " + resultado);
+        // ==================== MÉTODO AUXILIAR ====================
+
+    /*
+     * Lê e valida os dois números enviados no formato "NUM1,NUM2".
+     * Retorna um array com os dois inteiros, ou null se houver erro
+     * (nesse caso, já envia a mensagem de erro ao cliente).
+     */
+    private int[] lerDoisNumeros(String dados, PrintStream saida) {
+        try {
+            String[] numeros = dados.split(",");
+            if (numeros.length != 2) {
+                saida.println("ERRO: Formato inválido. Envie dois números separados por vírgula.");
+                return null;
+            }
+            int n1 = Integer.parseInt(numeros[0].trim());
+            int n2 = Integer.parseInt(numeros[1].trim());
+            return new int[]{n1, n2};
+        } catch (NumberFormatException e) {
+            saida.println("ERRO: Entrada inválida. Digite apenas números inteiros.");
+            return null;
+        }
     }
 
-    private void realizarSubtracao(Scanner entrada, PrintStream saida) {
-        saida.println("Digite o primeiro número:");
-        int numero1 = Integer.parseInt(entrada.nextLine());
-        saida.println("Digite o segundo número:");
-        int numero2 = Integer.parseInt(entrada.nextLine());
-        int resultado = numero1 - numero2;
-        saida.println("Resultado: " + resultado);
+    // ==================== OPERAÇÕES ====================
+
+    private void realizarSoma(String dados, PrintStream saida) {
+        int[] nums = lerDoisNumeros(dados, saida);
+        if (nums == null) return;
+        saida.println("Resultado: " + (nums[0] + nums[1]));
     }
 
-    private void realizarMultiplicacao(Scanner entrada, PrintStream saida) {
-        saida.println("Digite o primeiro número:");
-        int numero1 = Integer.parseInt(entrada.nextLine());
-        saida.println("Digite o segundo número:");
-        int numero2 = Integer.parseInt(entrada.nextLine());
-        int resultado = numero1 * numero2;
-        saida.println("Resultado: " + resultado);
+    private void realizarSubtracao(String dados, PrintStream saida) {
+        int[] nums = lerDoisNumeros(dados, saida);
+        if (nums == null) return;
+        saida.println("Resultado: " + (nums[0] - nums[1]));
+    }
+
+    private void realizarMultiplicacao(String dados, PrintStream saida) {
+        int[] nums = lerDoisNumeros(dados, saida);
+        if (nums == null) return;
+        saida.println("Resultado: " + (nums[0] * nums[1]));
     }
 }

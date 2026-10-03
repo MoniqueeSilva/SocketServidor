@@ -52,7 +52,17 @@ public class ClienteHandler implements Runnable {
                         realizarMultiplicacao(dados, escreveNoSocket);
                         break;
                     case "4":
-                        escreveNoSocket.println("Operação de imagem ainda não implementada.");
+                        try {
+                            String imagemBase64 = ImagemService.obterImagemBase64();
+
+                            escreveNoSocket.println("IMAGEM|" + imagemBase64);
+
+                            System.out.println("Imagem enviada para o cliente.");
+
+                        } catch (IOException e) {
+                            escreveNoSocket.println("ERRO: Não foi possível carregar a imagem.");
+                            System.out.println("Erro ao carregar imagem: " + e.getMessage());
+                        }
                         break;
                     case "0":
                         escreveNoSocket.println("Conexão encerrada pelo cliente.");

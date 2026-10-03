@@ -5,10 +5,14 @@ import java.util.Base64;
 
 public class ImagemService {
     private static final String CAMINHO_IMAGEM = "imagens/imagem.jpg";
+
     public static String obterImagemBase64() throws IOException {
         Path caminho = Path.of(CAMINHO_IMAGEM);
-        byte[] imagem = Files.readAllBytes(caminho); // Lê o arquivo inteiro e transforma em um vetor de bytes
-        return Base64.getEncoder().encodeToString(imagem); // Transforma esses bytes em uma String Base64.
+        if (!Files.exists(caminho) || Files.size(caminho) == 0) {
+            throw new IOException("Arquivo de imagem ausente ou vazio.");
+        }
+        byte[] imagem = Files.readAllBytes(caminho);
+        return Base64.getEncoder().encodeToString(imagem);
     }
 
     // Para testar sem Socket

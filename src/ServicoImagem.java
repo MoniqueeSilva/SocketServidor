@@ -3,7 +3,7 @@ import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Base64;
 
-public class ImagemService {
+public class ServicoImagem {
     private static final String CAMINHO_IMAGEM = "imagens/imagem.jpg";
 
     public static String obterImagemBase64() throws IOException {
@@ -13,17 +13,5 @@ public class ImagemService {
         }
         byte[] imagem = Files.readAllBytes(caminho);
         return Base64.getEncoder().encodeToString(imagem);
-    }
-
-    // Para testar sem Socket
-    public static void main(String[] args) {
-        try {
-            String base64 = obterImagemBase64();
-            System.out.println("Imagem convertida com sucesso!");
-            System.out.println("Tamanho Base64: " + base64.length());
-
-        } catch (IOException e) {
-            System.out.println("Erro ao ler imagem: " + e.getMessage());
-        }
     }
 }

@@ -3,16 +3,14 @@ import java.io.PrintStream;
 import java.net.Socket;
 import java.util.concurrent.BlockingQueue;
 
-/*
- * Thread responsável por consumir a fila de mensagens e escrever no socket.
- * Roda em paralelo com a thread leitora (ClienteHandler).
- */
-public class Escritor implements Runnable { 
+public class Escritora implements Runnable {
+
+    public static final String SENTINELA_FIM = "__FIM__";
 
     private final Socket socket;
     private final BlockingQueue<String> fila;
 
-    public Escritor(Socket socket, BlockingQueue<String> fila) {
+    public Escritora(Socket socket, BlockingQueue<String> fila) {
         this.socket = socket;
         this.fila = fila;
     }
@@ -22,12 +20,11 @@ public class Escritor implements Runnable {
         try {
             PrintStream saida = new PrintStream(socket.getOutputStream());
             while (true) {
-                String mensagem = fila.take();      // bloqueia até ter algo
-                if ("__FIM__".equals(mensagem)) break;
+                String mensagem = fila.take();
+                if (SENTINELA_FIM.equals(mensagem)) break;
                 saida.println(mensagem);
             }
         } catch (IOException | InterruptedException e) {
-            // thread encerrada silenciosamente
         }
     }
 }

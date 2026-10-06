@@ -8,7 +8,7 @@ import java.util.concurrent.BlockingQueue;
 public class Leitora {
 
     private final Socket socketCliente;
-    private final BlockingQueue<String> filaSaida;
+    private final BlockingQueue<String> filaSaida; // Fila de saída compartilhada com a Escritora para enviar respostas
 
     public Leitora(Socket socketCliente, BlockingQueue<String> filaSaida) {
         this.socketCliente = socketCliente;
@@ -17,19 +17,19 @@ public class Leitora {
 
     public void executar() throws IOException {
         Scanner leDoSocket = new Scanner(socketCliente.getInputStream());
-        PrintStream escreveNoSocket = new PrintStream(new SaidaFila(filaSaida), true, StandardCharsets.UTF_8);
+        PrintStream escreveNoSocket = new PrintStream(new SaidaFila(filaSaida), true, StandardCharsets.UTF_8); // Escreve na fila
 
         while (leDoSocket.hasNextLine()) {
             String mensagemCompleta = leDoSocket.nextLine();
-            System.out.println(
-                    "Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagemCompleta);
+            System.out.println("Cliente [" + socketCliente.getInetAddress().getHostAddress() + "] disse: " + mensagemCompleta);
 
-            Protocolo.Mensagem mensagem = Protocolo.separar(mensagemCompleta);
+            Protocolo.Mensagem mensagem = Protocolo.separar(mensagemCompleta); // Separa a mensagem no formato "codigo|dados" via classe Protocolo
             if (mensagem == null) {
                 escreveNoSocket.println("ERRO: Formato inválido.");
                 continue;
             }
 
+            // Extrai operação e parâmetros da mensagem
             String codigo = mensagem.codigo();
             String dados = mensagem.dados();
 

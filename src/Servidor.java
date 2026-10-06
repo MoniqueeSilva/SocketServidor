@@ -12,16 +12,19 @@ public class Servidor {
         ServerSocket servidor = new ServerSocket(12345);
         System.out.println("Servidor iniciado. Max de clientes: " + MAX_CLIENTES);
 
+        // Cria fila thread e guarda os sockets dos clientes atualmente conectados
         BlockingQueue<Socket> filaConexoes = new ArrayBlockingQueue<>(MAX_CLIENTES);
 
         while (true) {
             Socket socketCliente = servidor.accept();
             System.out.println("Novo cliente conectado: " + socketCliente.getInetAddress().getHostAddress());
 
+            // Tenta adicionar na fila sem bloquear
             if (filaConexoes.offer(socketCliente)) {
                 System.out.println("Cliente adicionado. Conexões ativas: " + filaConexoes.size() + "/" + MAX_CLIENTES);
                 socketCliente.getOutputStream().write("OK: Conectado ao servidor.\n".getBytes());
 
+                // Cria uma thread dedicada para gerenciar este cliente, cada cliente tem seu próprio GerenciadorConexao
                 Thread threadCliente = new Thread(new GerenciadorConexao(socketCliente, filaConexoes));
                 threadCliente.start();
             } else {

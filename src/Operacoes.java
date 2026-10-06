@@ -2,6 +2,7 @@ import java.io.PrintStream;
 
 public class Operacoes {
 
+    // Método auxiliar, lê, valida e retorna
     private static int[] lerDoisNumeros(String dados, PrintStream saida) {
         try {
             String[] numeros = dados.split(",");
@@ -9,6 +10,8 @@ public class Operacoes {
                 saida.println("ERRO: Formato inválido. Envie dois números separados por vírgula.");
                 return null;
             }
+
+            // Converte os números removendo os espaços e retorna
             int n1 = Integer.parseInt(numeros[0].trim());
             int n2 = Integer.parseInt(numeros[1].trim());
             return new int[] { n1, n2 };
@@ -18,6 +21,7 @@ public class Operacoes {
         }
     }
 
+    // Operação de soma 
     public static void somar(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
         if (nums == null)
@@ -25,6 +29,7 @@ public class Operacoes {
         saida.println("Resultado: " + (nums[0] + nums[1]));
     }
 
+    // Operação de subtração 
     public static void subtrair(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
         if (nums == null)
@@ -32,6 +37,7 @@ public class Operacoes {
         saida.println("Resultado: " + (nums[0] - nums[1]));
     }
 
+    // Operaçã de multiplicação
     public static void multiplicar(String dados, PrintStream saida) {
         int[] nums = lerDoisNumeros(dados, saida);
         if (nums == null)

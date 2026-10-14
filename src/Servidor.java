@@ -9,7 +9,7 @@ public class Servidor {
     private static final int MAX_CLIENTES = 3;
 
     public static void main(String[] args) throws IOException {
-        ServerSocket servidor = new ServerSocket(12345);
+        ServerSocket servidor = new ServerSocket(12346);
         System.out.println("Servidor iniciado. Max de clientes: " + MAX_CLIENTES);
 
         // Cria fila thread e guarda os sockets dos clientes atualmente conectados
